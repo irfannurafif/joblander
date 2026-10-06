@@ -196,6 +196,10 @@ def test_first_run_narrows_search(tmp_path, monkeypatch):
     seen = {}
     monkeypatch.setattr(S, "source_mcf", lambda cfg, llm, days=2, **kw: seen.update(mcf=(days, kw)) or [])
     monkeypatch.setattr(S, "source_linkedin", lambda cfg, llm, days=2, **kw: seen.update(li=(days, kw)) or [])
+    monkeypatch.setattr(S, "source_tokyodev", lambda cfg, llm, days=2, **kw: seen.update(td=(days, kw)) or [])
+    monkeypatch.setattr(S, "source_japandev", lambda cfg, llm, days=2, **kw: seen.update(jd=(days, kw)) or [])
     S.source_all(None, None, days=7, first_run=True)
     assert seen == {"mcf": (7, {"limit_per_kw": 10, "max_keywords": 3}),
-                    "li": (7, {"max_keywords": 3})}
+                    "li": (7, {"max_keywords": 3}),
+                    "td": (7, {"max_per_kw": 10, "max_keywords": 3}),
+                    "jd": (7, {"max_fetch": 20})}

@@ -70,12 +70,14 @@ policy:
     EUR: 1.42
     GBP: 1.70
     RMB: 0.186
+    JPY: 0.0089                   # 日本板（TokyoDev/Japan Dev）薪酬带是 ¥/年
   equity_discount_factors:        # 股权折价档：期权/未上市按更狠的折价计入总包
     light: 1.0                    # 上市公司 RSU，面值即价值
     medium: 0.5
     heavy: 0.0                    # 早期期权，按 0 计——不为纸面财富让步现金
   reference_conversions:          # （可选）搬迁机会的参考换算线，信息参考非一票否决
     berlin: {tc: 200000, currency: EUR, sgd_equiv: 280000}
+    tokyo: {tc: 10000000, currency: JPY, sgd_equiv: 89000}
   group_exclusivity:              # （可选）同集团互斥：投了 A 就不该再投 B，去重时按组判定
     - group: 示例集团
       members: ["集团公司A", "集团公司B"]

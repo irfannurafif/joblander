@@ -163,7 +163,7 @@ Perception          Agents                      Gate           Memory
 ──────────          ──────                      ────           ──────
 Gmail scan   ┐                                                 Event Log (JSONL, SoT)
 Notion diff  ├──►  Intelligence  ─┐                            Company archives
-MCF postings │     Resume        ─┼──► proposals ──► YOU ──►   Achievement bank
+MCF/JP boards│     Resume        ─┼──► proposals ──► YOU ──►   Achievement bank
 Paste/upload ┘     Operations    ─┘         ▲                  Playbook
                                             │                  Golden sets
                    Sentinel (cross-cutting) ┘

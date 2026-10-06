@@ -40,14 +40,15 @@ def test_parse_cards_and_detail():
     assert lead["jd_excerpt"].startswith("We need") and "Mid-Senior" in lead["highlight"]
 
 
-def _cfg(tmp_path, linkedin=True):
+def _cfg(tmp_path, linkedin=True, extra_prefs=""):
     ws = tmp_path / "ws"
     (ws / "09-projections").mkdir(parents=True)
     (ws / "09-projections" / "tracker.json").write_text(json.dumps(
         {"rows": [{"Company": "Tracked Ltd", "Status": "Applied"}]}), encoding="utf-8")
     (ws / "02-targets").mkdir()
     (ws / "02-targets" / "sourcing-prefs.yaml").write_text(
-        "keywords: [software engineer]\nlocations: [Singapore]\nexclude: [intern]\n", encoding="utf-8")
+        "keywords: [software engineer]\nlocations: [Singapore]\nexclude: [intern]\n" + extra_prefs,
+        encoding="utf-8")
     return Config(raw={"workspace_dir": str(ws), "features": {"linkedin": linkedin}},
                   path=tmp_path / "c.yaml")
 
@@ -79,11 +80,26 @@ def test_source_linkedin_pipeline(tmp_path, monkeypatch):
     assert S.source_linkedin(cfg, MockLLM([])) == []                 # 幂等：见过的不再提
 
 
+def test_linkedin_multi_location(tmp_path, monkeypatch):
+    """prefs.linkedin_locations 多地（如新加坡+东京）；缺省仍只搜首选一处。"""
+    calls = []
+    monkeypatch.setattr(S, "linkedin_search", lambda kw, loc, hours=48, start=0:
+                        calls.append(loc) or [])
+    cfg = _cfg(tmp_path, extra_prefs="linkedin_locations: [Singapore, Tokyo]\n")
+    assert S.source_linkedin(cfg, MockLLM([])) == []
+    assert calls == ["Singapore", "Tokyo"]
+    calls.clear()
+    assert S.source_linkedin(_cfg(tmp_path / "c"), MockLLM([])) == []
+    assert calls == ["Singapore"]                                 # 缺省：只搜第一处
+
+
 def test_linkedin_off_or_blocked_never_raises(tmp_path, monkeypatch):
     assert S.source_linkedin(_cfg(tmp_path / "a", linkedin=False), MockLLM([])) == []
     cfg = _cfg(tmp_path / "b")
     def blocked(*a, **k):
         raise OSError("429 Too Many Requests")
     monkeypatch.setattr(S, "linkedin_search", blocked)
-    monkeypatch.setattr(S, "source_mcf", lambda cfg, llm, days=2: [])
-    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0}
+    monkeypatch.setattr(S, "source_mcf", lambda cfg, llm, days=2, **k: [])
+    monkeypatch.setattr(S, "source_tokyodev", lambda cfg, llm, days=2, **k: [])
+    monkeypatch.setattr(S, "source_japandev", lambda cfg, llm, days=2, **k: [])
+    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0, "tokyodev": 0, "japandev": 0}

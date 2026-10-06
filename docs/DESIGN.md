@@ -726,3 +726,17 @@ stateDiagram-v2
 | WhatsApp / 任意 JD | 贴入 | 全局「＋ 贴入」→ 抽取+查重+评分 |
 
 fit 评估（1-5）只消费偏好文本与岗位公开信息，不接触薪酬红线；中介代招不扣分但进 flags。夜扫幂等（uuid seen 去重），排除词命中在源头丢弃记账。
+
+### v2.3（2026-10-06）：日本公开板接入——Japan Dev / TokyoDev + LinkedIn 多地点
+
+用户目标扩展到日本市场。接入两块英文友好的日本公开板（均无登录、robots.txt 放行、诚实边界内），
+并放开 LinkedIn 只搜首选一处的限制：
+
+| 渠道 | 自动化 | 实现 |
+|---|---|---|
+| Japan Dev | 全自动（同 MCF 级） | 列表页搜索是前端渲染、无挂牌日期 → **sitemap 增量认新**；详情页内嵌 schema.org JobPosting（datePosted + JD 正文），旧岗抓到即记账不重抓；`features.japandev` 可关 |
+| TokyoDev | 全自动（同 MCF 级） | 列表页 `?query[]=` 服务端收窄，按偏好关键词抓**列表卡**（薪资带/日语要求/海外可投/技能标签）；详情页被 Cloudflare 盾住 → 无 JD 正文，fit 只按偏好+卡片字段评；`features.tokyodev` 可关 |
+| LinkedIn | 半自动→多地点 | prefs 新增 `linkedin_locations`（列表）：给了就逐地搜，缺省仍只搜首选一处（原行为不变） |
+
+薪酬口径：`policy.fx` 补 JPY（¥ 挂牌带按年），`reference_conversions` 补 tokyo 参考线。
+测试样本取自真实页面（tests/fixtures/），first_run 对两个新源同样收窄额度。
