@@ -1,6 +1,6 @@
 """界面英文表：键是中文原文（模板里 _() 包住的那句），值是英文。缺键回落中文。"""
 
-EN: dict[str, str] = {' High 机会': ' high-priority leads',
+EN: dict[str, str] = {'重新评分': 'Rescore', ' High 机会': ' high-priority leads',
  ' 和 LinkedIn': ' and LinkedIn',
  ' 失败：': ' failed: ',
  ' 完成': ' done',

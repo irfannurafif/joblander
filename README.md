@@ -87,10 +87,14 @@ joblander onboard                 # config health check + workspace scaffold
 joblander research <company>      # zero-input due diligence
 joblander brief <company>         # pre-interview brief
 joblander check "<text>"          # run text past the Sentinel guard
+joblander rescore <lead-id>       # pending proposal filename or stem; update score/gaps in place
+joblander rescore --all-new       # rescore all New Leads using current Arsenal/preferences
 joblander intake <file>           # add an opportunity from pasted text
 joblander weekly                  # weekly report
 joblander daemon                  # background jobs (calendar sync, reminders, scans)
 ```
+
+Rescoring preserves lead metadata and saved job descriptions. Older leads use their saved attachment or excerpt and report limited context when applicable; descriptions are never fetched again. Failed assessments keep the previous score. Batch output shows live progress with each lead's old and new score, continues after failures, and ends with Rescored, Changed, Unchanged, and Failed counts. Rescored counts all attempts, including failures; Changed and Unchanged compare numeric scores for successful attempts. The command exits nonzero if any lead fails.
 
 ---
 

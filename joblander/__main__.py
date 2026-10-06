@@ -52,6 +52,11 @@ def _run(argv: list[str] | None = None) -> int:
     p_intake.add_argument("file", help="贴入内容的文本文件（- 读 stdin）")
     p_intake.add_argument("--source", default="paste")
 
+    p_rescore = sub.add_parser("rescore", help="Rescore existing New Leads in place")
+    targets = p_rescore.add_mutually_exclusive_group(required=True)
+    targets.add_argument("lead_id", nargs="?", help="Pending proposal filename or stem")
+    targets.add_argument("--all-new", action="store_true", help="Rescore all pending New Leads")
+
     p_apply = sub.add_parser("apply")
     p_apply.add_argument("proposal", help="11-shadow / 12-intake 下的提案 JSON")
     p_apply.add_argument("--yes", action="store_true", help="实弹执行（缺省 dry-run）")
@@ -106,6 +111,46 @@ def _run(argv: list[str] | None = None) -> int:
         from joblander.notion import pull_tracker
         rows = pull_tracker(cfg)
         print(f"pulled {len(rows)} rows → 09-projections/tracker.json")
+
+    elif args.cmd == "rescore":
+        from joblander.rescore import pending_leads, resolve_lead, rescore_lead, rescore_all_new
+        from joblander.llm import from_config as llm_from_config
+        import json
+        def print_summary(summary):
+            print(flush=True)
+            for name in ('rescored', 'changed', 'unchanged', 'failed'):
+                print(f"{name.capitalize()}: {summary[name]}", flush=True)
+
+        def print_progress(event):
+            if event['status'] == 'start':
+                print(f"Rescoring {event['index']}/{event['total']}: "
+                      f"{event['company']} — {event['position']}...", flush=True)
+                old = event['old_score']
+                print(f"Old score: {str(old) + '/5' if old is not None else 'Unscored'}",
+                      flush=True)
+            elif event['status'] == 'success':
+                print(f"New score: {event['new_score']}/5", flush=True)
+                if 'limited context' in event['context']:
+                    print(f"Context: {event['context']}", flush=True)
+                print(flush=True)
+            else:
+                print(f"Failed: {event['error']}", flush=True)
+                print(flush=True)
+
+        if args.all_new and not pending_leads(cfg):
+            print("No New Leads to rescore", flush=True)
+            print_summary(dict.fromkeys(('rescored', 'changed', 'unchanged', 'failed'), 0))
+            return 0
+        if not args.all_new:
+            resolve_lead(cfg, args.lead_id)
+        llm = llm_from_config(cfg, "flash")
+        result = (rescore_all_new(cfg, llm, progress=print_progress) if args.all_new
+                  else rescore_lead(cfg, llm, args.lead_id))
+        if args.all_new:
+            print_summary(result['summary'])
+        else:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 1 if result.get("failed") else 0
 
     elif args.cmd == "brief":
         from joblander.llm import from_config as llm_from_config

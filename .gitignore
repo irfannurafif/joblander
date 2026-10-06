@@ -1,5 +1,5 @@
 # 私有配置与数据 —— 永不入库
-config.yaml
+config.yaml*
 data/
 *.env
 .env*
