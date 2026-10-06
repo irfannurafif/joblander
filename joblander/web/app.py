@@ -622,6 +622,8 @@ def create_app(with_daemon: bool = True) -> FastAPI:
                 state = {}
         mcf_last = _log().last("sourcing.mcf_run")   # 倒序早停，不再读整份日志
         li_last = _log().last("sourcing.linkedin_run")
+        td_last = _log().last("sourcing.tokyodev_run")
+        jd_last = _log().last("sourcing.japandev_run")
         bankp = cfg.workspace_dir / "03-materials" / "achievement-bank.md"
         bank = {"exists": bankp.exists(),
                 "kb": round(bankp.stat().st_size / 1024) if bankp.exists() else 0,
@@ -640,7 +642,7 @@ def create_app(with_daemon: bool = True) -> FastAPI:
             "src", good=good, low=low, total=len(leads), prefs=prefs,
             links=search_links(prefs), profile_files=profile_files, bank=bank,
             digest_chars=len(_profile_digest(cfg)),
-            li_last=li_last,
+            li_last=li_last, td_last=td_last, jd_last=jd_last,
             gmail_last=(state.get("last.gmail_scan") or "")[:16].replace("T", " "),
             mcf_last=mcf_last))
 
@@ -1120,6 +1122,20 @@ def create_app(with_daemon: bool = True) -> FastAPI:
         from joblander.sourcing import source_mcf
         tid = start_task("mcf", "扫 MyCareersFuture",
                          lambda: {"proposals": len(source_mcf(cfg, _llm("flash"), days=days))})
+        return {"ok": True, "task": tid, "label": TASKS[tid]["label"]}
+
+    @app.post("/api/tokyodev/scan")
+    def api_tokyodev_scan(days: int = Form(2)):
+        from joblander.sourcing import source_tokyodev
+        tid = start_task("tokyodev", "扫 TokyoDev",
+                         lambda: {"proposals": len(source_tokyodev(cfg, _llm("flash"), days=days))})
+        return {"ok": True, "task": tid, "label": TASKS[tid]["label"]}
+
+    @app.post("/api/japandev/scan")
+    def api_japandev_scan(days: int = Form(2)):
+        from joblander.sourcing import source_japandev
+        tid = start_task("japandev", "扫 Japan Dev",
+                         lambda: {"proposals": len(source_japandev(cfg, _llm("flash"), days=days))})
         return {"ok": True, "task": tid, "label": TASKS[tid]["label"]}
 
     @app.post("/api/scan")

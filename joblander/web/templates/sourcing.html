@@ -42,7 +42,11 @@
   <button class="btn pri" onclick="dlg('dlg-intake')">{{ _('＋ 贴入') }}</button>
 </div>
 <h1>{{ _('新机会') }}</h1>
-<div class="sub">{{ _('每晚 02:30 按你的偏好搜 {src} 的新岗位 → 去重 → 对照弹药库打匹配分、初筛硬性要求 → 在这里等你决定入不入池。', src='MyCareersFuture' ~ (_(' 和 LinkedIn') if features.linkedin else '')) }}</div>
+{% set srcs = ['MyCareersFuture'] %}
+{% if features.linkedin %}{% set srcs = srcs + ['LinkedIn'] %}{% endif %}
+{% if features.tokyodev %}{% set srcs = srcs + ['TokyoDev'] %}{% endif %}
+{% if features.japandev %}{% set srcs = srcs + ['Japan Dev'] %}{% endif %}
+<div class="sub">{{ _('每晚 02:30 按你的偏好搜 {src} 的新岗位 → 去重 → 对照弹药库打匹配分、初筛硬性要求 → 在这里等你决定入不入池。', src=srcs|join(' / ')) }}</div>
 
 {% if prefs.get('guessed') %}
 <div class="card tint-amber" style="margin-bottom:16px">
@@ -62,6 +66,8 @@
 <div class="scanbar">
   <span>{{ _('MCF 上次') }} <b class="num">{% if mcf_last %}{{ mcf_last.ts[:16].replace('T',' ') }}{% else %}—{% endif %}</b></span>
   {% if features.linkedin %}<span>{{ _('LinkedIn 上次') }} <b class="num">{% if li_last %}{{ li_last.ts[:16].replace('T',' ') }}{% else %}—{% endif %}</b></span>{% endif %}
+  {% if features.tokyodev %}<span>{{ _('TokyoDev 上次') }} <b class="num">{% if td_last %}{{ td_last.ts[:16].replace('T',' ') }}{% else %}—{% endif %}</b></span>{% endif %}
+  {% if features.japandev %}<span>{{ _('Japan Dev 上次') }} <b class="num">{% if jd_last %}{{ jd_last.ts[:16].replace('T',' ') }}{% else %}—{% endif %}</b></span>{% endif %}
   <button class="btn pri" onclick="post('/api/sourcing/scan',{days:2},{btn:this})">{{ _('↻ 立即搜') }}</button>
   {% if conn.gmail %}<span style="color:var(--line-strong)">｜</span>
   <span>{{ _('Gmail 上次') }} <b class="num">{{ gmail_last or '—' }}</b></span>
@@ -136,6 +142,14 @@
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
         {% for l in links if 'LinkedIn' in l.label %}<a class="btn" href="{{ l.url }}" target="_blank" style="font-size:12px">{{ l.label }} ↗</a>{% endfor %}
       </div></div></div>
+    {% endif %}
+    {% if features.tokyodev %}
+    <div class="row"><span class="when">{{ _('自动') }}</span><div class="body"><b>TokyoDev</b>
+      <div class="meta">{{ _('每晚按关键词抓日本英文岗列表卡（薪资带/日语要求，无 JD 正文）') }}{% if td_last %} ｜ {{ _('上次抓 {a} 提 {b}', a=td_last.payload.fetched, b=td_last.payload.proposed) }}{% endif %} ｜ <a href="/settings#features">{{ _('可在设置里关') }}</a></div></div></div>
+    {% endif %}
+    {% if features.japandev %}
+    <div class="row"><span class="when">{{ _('自动') }}</span><div class="body"><b>Japan Dev</b>
+      <div class="meta">{{ _('每晚按 sitemap 增量抓新岗，详情带挂牌日期与 JD 正文') }}{% if jd_last %} ｜ {{ _('上次抓 {a} 提 {b}', a=jd_last.payload.fetched, b=jd_last.payload.proposed) }}{% endif %} ｜ <a href="/settings#features">{{ _('可在设置里关') }}</a></div></div></div>
     {% endif %}
     {% if conn.gmail %}
     <div class="row"><span class="when">{{ _('自动') }}</span><div class="body"><b>Gmail</b>{{ _('（含 LinkedIn Job Alert 邮件）') }}

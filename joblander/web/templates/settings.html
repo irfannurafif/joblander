@@ -70,6 +70,12 @@
   <div class="row"><div class="body"><b>{{ _('LinkedIn 职位自动搜索') }}</b>
     <div class="meta">{{ _('按求职偏好每晚搜一次 LinkedIn 公开职位（免登录接口），和 MCF 一起打分入池。接口随时可能被 LinkedIn 调整或限流。') }}</div></div>
     <label class="switch"><input type="checkbox" {{ 'checked' if features.linkedin }} onchange="post('/api/settings/features',{name:'linkedin',on:this.checked?1:0},{ok:this.checked?{{ _('已开启')|jsq }}:{{ _('已关闭')|jsq }}})"><span></span></label></div>
+  <div class="row"><div class="body"><b>TokyoDev</b>
+    <div class="meta">{{ _('每晚按关键词抓 TokyoDev（日本英文岗板）的列表卡——薪资带、日语要求、海外可投。详情页有 Cloudflare 盾，故不带 JD 正文。') }}</div></div>
+    <label class="switch"><input type="checkbox" {{ 'checked' if features.tokyodev }} onchange="post('/api/settings/features',{name:'tokyodev',on:this.checked?1:0},{ok:this.checked?{{ _('已开启')|jsq }}:{{ _('已关闭')|jsq }}})"><span></span></label></div>
+  <div class="row"><div class="body"><b>Japan Dev</b>
+    <div class="meta">{{ _('每晚按 sitemap 增量抓 Japan Dev（日本英文岗板）新岗，详情页带挂牌日期与 JD 正文，超出日期范围的旧岗自动跳过。') }}</div></div>
+    <label class="switch"><input type="checkbox" {{ 'checked' if features.japandev }} onchange="post('/api/settings/features',{name:'japandev',on:this.checked?1:0},{ok:this.checked?{{ _('已开启')|jsq }}:{{ _('已关闭')|jsq }}})"><span></span></label></div>
   <div class="row"><div class="body"><b>{{ _('练兵场') }}</b>
     <div class="meta">{{ _('算法题练习，可在线运行代码——偏软件工程岗位。开启后侧栏出现入口。') }}</div></div>
     <label class="switch"><input type="checkbox" {{ 'checked' if features.drill }} onchange="post('/api/settings/features',{name:'drill',on:this.checked?1:0},{ok:this.checked?{{ _('已开启')|jsq }}:{{ _('已关闭')|jsq }},reload:true})"><span></span></label></div>
