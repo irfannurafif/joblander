@@ -1152,3 +1152,23 @@ def test_export_all_data_zip(client):
     assert "Acme AI" in z.read("workspace/09-projections/tracker.json").decode()
     conf = z.read("config.yaml").decode()
     assert "fake" not in conf and "<redacted>" in conf          # notion token 抹掉
+
+
+def test_rescore_action_and_endpoint(client, monkeypatch):
+    import joblander.web.app as webapp
+    import joblander.rescore as rescore
+    calls = []
+    monkeypatch.setattr(webapp, 'start_task', lambda kind, label, fn: (
+        calls.append((kind, fn)), webapp.TASKS.update({'rescore-test': {'label': label}}),
+        'rescore-test')[-1])
+    monkeypatch.setattr(rescore, 'rescore_lead', lambda cfg, llm, identifier: {'fit': 5})
+    page = client.get('/sourcing')
+    assert '/api/sourcing/rescore' in page.text
+    response = client.post('/api/sourcing/rescore', data={'file': 'p1'})
+    assert response.status_code == 200 and response.json()['task'] == 'rescore-test'
+    monkeypatch.setattr('joblander.llm.from_config', lambda *a: object())
+    assert calls[0][1]() == {'fit': 5}
+    # Validation happens before scheduling; no model is needed for invalid targets.
+    assert client.post('/api/sourcing/rescore', data={'file': '../outside.json'}).status_code == 400
+    assert client.post('/api/sourcing/rescore', data={'file': 's1'}).status_code == 400
+    assert calls[0][0] == 'rescore'

@@ -1105,6 +1105,17 @@ def create_app(with_daemon: bool = True) -> FastAPI:
         _stamp_state({"last.notion_pull": datetime.now(SGT).isoformat(timespec="seconds")})
         return {"rows": len(rows)}
 
+    @app.post("/api/sourcing/rescore")
+    def api_sourcing_rescore(file: str = Form(...)):
+        from joblander.rescore import resolve_lead, rescore_lead
+        try:
+            path = resolve_lead(cfg, file)
+        except ValueError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+        tid = start_task("rescore", "重新评分",
+                         lambda: rescore_lead(cfg, _llm("flash"), str(path)))
+        return {"ok": True, "task": tid, "label": TASKS[tid]["label"]}
+
     @app.post("/api/sourcing/scan")
     def api_sourcing_scan(days: int = Form(2)):
         """立即搜：MCF + LinkedIn（开着的话）同一条查重/评分/入池管线。"""

@@ -23,6 +23,7 @@
     {% if p.lead.comp_mentions %}<div class="meta">{{ icon("coins", 13) }}{{ p.lead.comp_mentions | join('；') }}</div>{% endif %}
     {% if p.lead.market_ref %}<div class="meta">📊 {{ p.lead.market_ref }}</div>{% endif %}
   </div>
+  <button class="btn" onclick="post('/api/sourcing/rescore',{file:{{ p._file|jsq }}},{btn:this})">{{ _('重新评分') }}</button>
   <button class="btn pri" onclick="post('/api/proposal/apply',{file:'{{ p._file }}'},{btn:this,ok:{{ _('已入池')|jsq }},reload:true})" title="{{ _('tracker 建行（线索列）+ 建公司档案') }}">{{ _('批准入池') }}</button>
   <button class="btn danger" onclick="post('/api/proposal/reject',{file:'{{ p._file }}'},{btn:this,ok:{{ _('已否决')|jsq }},reload:true})">{{ _('否决') }}</button>
 </div>
