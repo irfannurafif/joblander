@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlparse
@@ -455,6 +456,9 @@ def create_app(with_daemon: bool = True) -> FastAPI:
         dst = d / f"original-{safe}"
         dst.write_bytes(await file.read())
         text = companyfile._file_text(dst)
+        if companyfile.looks_garbled(text):       # 拒在花钱之前：读出来是乱码就别送 LLM
+            return JSONResponse({"error": _t("读不出简历文字——文件可能损坏或不是文字版，换一份 PDF 或 Word 再传")},
+                                status_code=400)
         if len(text.strip()) < 200:
             return JSONResponse({"error": _t("读不出简历文字——可能是扫描版，换一份能选中文字的版本")},
                                 status_code=400)
@@ -590,6 +594,7 @@ def create_app(with_daemon: bool = True) -> FastAPI:
     def sourcing_page(request: Request):
         from joblander.scout import _name_tokens
         from joblander.sourcing import load_prefs, search_links
+        from joblander.targets import load_status
         leads = _split_pending(list_pending(cfg))["lead"]
         glist: list[dict] = []
         for p in leads:
@@ -624,6 +629,7 @@ def create_app(with_daemon: bool = True) -> FastAPI:
         li_last = _log().last("sourcing.linkedin_run")
         td_last = _log().last("sourcing.tokyodev_run")
         jd_last = _log().last("sourcing.japandev_run")
+        tg_last = _log().last("sourcing.targets_run")
         bankp = cfg.workspace_dir / "03-materials" / "achievement-bank.md"
         bank = {"exists": bankp.exists(),
                 "kb": round(bankp.stat().st_size / 1024) if bankp.exists() else 0,
@@ -641,8 +647,9 @@ def create_app(with_daemon: bool = True) -> FastAPI:
         return tpl.TemplateResponse(request, "sourcing.html", ctx(
             "src", good=good, low=low, total=len(leads), prefs=prefs,
             links=search_links(prefs), profile_files=profile_files, bank=bank,
+            target_status=load_status(cfg),
             digest_chars=len(_profile_digest(cfg)),
-            li_last=li_last, td_last=td_last, jd_last=jd_last,
+            li_last=li_last, td_last=td_last, jd_last=jd_last, tg_last=tg_last,
             gmail_last=(state.get("last.gmail_scan") or "")[:16].replace("T", " "),
             mcf_last=mcf_last))
 
@@ -1122,8 +1129,9 @@ def create_app(with_daemon: bool = True) -> FastAPI:
     def api_sourcing_scan(days: int = Form(2)):
         """立即搜：MCF + LinkedIn（开着的话）同一条查重/评分/入池管线。"""
         from joblander.sourcing import load_prefs, source_all
-        if not load_prefs(cfg).get("keywords"):
-            return JSONResponse({"error": _t("先在下方「搜索偏好」填目标岗位关键词")}, status_code=400)
+        prefs = load_prefs(cfg)
+        if not prefs.get("keywords") and not prefs.get("targets"):
+            return JSONResponse({"error": _t("先在下方「搜索偏好」填目标岗位关键词或目标公司")}, status_code=400)
         tid = start_task("sourcing", "搜新机会",
                          lambda: source_all(cfg, _llm("flash"), days=days))
         return {"ok": True, "task": tid, "label": TASKS[tid]["label"]}
@@ -1568,6 +1576,9 @@ def create_app(with_daemon: bool = True) -> FastAPI:
             if k in form:
                 patch[k] = [s.strip() for s in form[k].replace("，", ",").split(",")
                             if s.strip()]
+        if "targets" in form:                    # 一行一家（名字或招聘页链接），也认逗号
+            items = re.split(r"[\n,，]", form["targets"])
+            patch["targets"] = list(dict.fromkeys(t.strip() for t in items if t.strip()))[:30]
         patch["guessed"] = False                 # 他亲手存过一次，就不再是「猜的」
         save_prefs(cfg, patch)
         return {"ok": True}

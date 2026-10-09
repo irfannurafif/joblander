@@ -132,4 +132,4 @@ def test_jp_off_or_blocked_never_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(S, "source_linkedin", lambda cfg, llm, days=2, **k: [])
     assert S.source_tokyodev(cfg, MockLLM([])) == []
     assert S.source_japandev(cfg, MockLLM([])) == []
-    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0, "tokyodev": 0, "japandev": 0}
+    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0, "tokyodev": 0, "japandev": 0, "targets": 0}

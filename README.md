@@ -107,7 +107,7 @@ Rescoring preserves lead metadata and saved job descriptions. Older leads use th
   <img alt="New opportunities" src="docs/images/sourcing-en-light.webp">
 </picture>
 
-**New opportunities.** Overnight scans (job board + inbox) land here scored 1–5 against your achievement bank, grouped by company, with the specific requirement gaps spelled out — "Terraform production experience — your record shows use, not ownership." Nothing enters the pipeline until you approve it.
+**New opportunities.** Overnight scans (job board + inbox) land here scored 1–5 against your achievement bank, grouped by company, with the specific requirement gaps spelled out — "Terraform production experience — your record shows use, not ownership." Nothing enters the pipeline until you approve it. Have specific companies in mind? List them as targets: joblander pulls their open roles straight from the careers page (Greenhouse, Lever, Ashby; others via LinkedIn / MCF), shortlists the ones that fit, and keeps watching for new ones.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/war-room-board-en-dark.webp">

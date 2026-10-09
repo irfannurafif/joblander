@@ -102,4 +102,4 @@ def test_linkedin_off_or_blocked_never_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(S, "source_mcf", lambda cfg, llm, days=2, **k: [])
     monkeypatch.setattr(S, "source_tokyodev", lambda cfg, llm, days=2, **k: [])
     monkeypatch.setattr(S, "source_japandev", lambda cfg, llm, days=2, **k: [])
-    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0, "tokyodev": 0, "japandev": 0}
+    assert S.source_all(cfg, MockLLM([])) == {"mcf": 0, "linkedin": 0, "tokyodev": 0, "japandev": 0, "targets": 0}
